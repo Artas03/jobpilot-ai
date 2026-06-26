@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="..\JobPilotAI.Application\JobPilotAI.Application.csproj" />
     <ProjectReference Include="..\JobPilotAI.Domain\JobPilotAI.Domain.csproj" />
   </ItemGroup>
