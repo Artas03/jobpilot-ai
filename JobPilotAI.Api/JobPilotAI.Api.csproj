@@ -13,7 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\JobPilotAI.Application\JobPilotAI.Application.csproj" />
-    <ProjectReference Include="..\JobPilotAI.Infrastructure\JobPilotAI.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
