@@ -1,0 +1,131 @@
+.content-panel {
+    max-width: 900px;
+}
+
+.content-panel h2 {
+    margin-bottom: 28px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+}
+
+.field {
+    min-width: 0;
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+.cost-field {
+    max-width: calc(50% - 11px);
+}
+
+label {
+    margin-bottom: 8px;
+    display: block;
+    color: #26332f;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.form-control {
+    width: 100%;
+    min-height: 48px;
+    padding: 11px 13px;
+    border: 1px solid #cbd4d1;
+    border-radius: 6px;
+    background: #fff;
+    color: #17202a;
+    font: inherit;
+}
+
+.form-control:focus {
+    border-color: #0d6b5d;
+    outline: 3px solid rgba(13, 107, 93, 0.13);
+    box-shadow: none;
+}
+
+.notes-input {
+    min-height: 150px;
+    resize: vertical;
+}
+
+::deep .validation-message {
+    margin-top: 6px;
+    display: block;
+    color: #a43b36;
+    font-size: 0.82rem;
+}
+
+.error-message {
+    margin-top: 24px;
+    padding: 14px 16px;
+    border-left: 4px solid #b5463f;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    background: #fdf0ef;
+    color: #7d2f2b;
+    font-size: 0.9rem;
+}
+
+.complete-button {
+    width: 100%;
+    min-height: 58px;
+    margin-top: 30px;
+    padding: 15px 24px;
+    border: 1px solid #0d6b5d;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 11px;
+    background: #0d6b5d;
+    color: #fff;
+    font: inherit;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.complete-button:hover:not(:disabled) {
+    background: #09564b;
+    border-color: #09564b;
+}
+
+.complete-button:disabled {
+    cursor: wait;
+    opacity: 0.78;
+}
+
+.spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 700ms linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@media (max-width: 680px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .full-width {
+        grid-column: auto;
+    }
+
+    .cost-field {
+        max-width: none;
+    }
+}

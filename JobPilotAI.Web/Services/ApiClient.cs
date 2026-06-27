@@ -1,0 +1,22 @@
+using System.Net.Http.Json;
+using JobPilotAI.Web.Models;
+
+namespace JobPilotAI.Web.Services;
+
+public sealed class ApiClient(HttpClient httpClient)
+{
+    public async Task<ProcessJobResult> ProcessJobAsync(
+        ProcessJobRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        using var response = await httpClient.PostAsJsonAsync(
+            "/api/jobs/process",
+            request,
+            cancellationToken);
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<ProcessJobResult>(cancellationToken)
+            ?? throw new InvalidOperationException("The API returned an empty response.");
+    }
+}

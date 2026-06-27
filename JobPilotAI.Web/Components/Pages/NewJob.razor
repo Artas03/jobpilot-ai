@@ -1,4 +1,8 @@
 @page "/new-job"
+@rendermode InteractiveServer
+@inject ApiClient ApiClient
+@inject JobResultState ResultState
+@inject NavigationManager Navigation
 
 <PageTitle>New Job | JobPilotAI</PageTitle>
 
@@ -10,6 +14,119 @@
 
 <section class="content-panel">
     <h2>Job details</h2>
-    <p>The job entry form will be connected here in the next stage.</p>
-    <a class="back-link" href="/">Return to dashboard</a>
+    <EditForm Model="form" OnValidSubmit="SubmitAsync" FormName="new-job-form">
+        <DataAnnotationsValidator />
+
+        <div class="form-grid">
+            <div class="field full-width">
+                <label for="trade">Trade</label>
+                <InputSelect id="trade" class="form-control" @bind-Value="form.TradeType">
+                    <option value="">Select a trade</option>
+                    @foreach (var trade in trades)
+                    {
+                        <option value="@trade">@FormatTrade(trade)</option>
+                    }
+                </InputSelect>
+                <ValidationMessage For="@(() => form.TradeType)" />
+            </div>
+
+            <div class="field">
+                <label for="customer-name">Customer Name</label>
+                <InputText id="customer-name" class="form-control" @bind-Value="form.CustomerName" />
+                <ValidationMessage For="@(() => form.CustomerName)" />
+            </div>
+
+            <div class="field">
+                <label for="job-address">Job Address</label>
+                <InputText id="job-address" class="form-control" @bind-Value="form.JobAddress" />
+                <ValidationMessage For="@(() => form.JobAddress)" />
+            </div>
+
+            <div class="field full-width">
+                <label for="job-notes">Job Notes</label>
+                <InputTextArea id="job-notes" class="form-control notes-input" @bind-Value="form.RawNotes" />
+                <ValidationMessage For="@(() => form.RawNotes)" />
+            </div>
+
+            <div class="field">
+                <label for="labour-hours">Labour Hours</label>
+                <InputNumber id="labour-hours" class="form-control" @bind-Value="form.LabourHours" step="0.25" min="0" />
+                <ValidationMessage For="@(() => form.LabourHours)" />
+            </div>
+
+            <div class="field">
+                <label for="hourly-rate">Hourly Rate (&pound;)</label>
+                <InputNumber id="hourly-rate" class="form-control" @bind-Value="form.HourlyRate" step="0.01" min="0" />
+                <ValidationMessage For="@(() => form.HourlyRate)" />
+            </div>
+
+            <div class="field full-width cost-field">
+                <label for="materials-cost">Materials Cost (&pound;)</label>
+                <InputNumber id="materials-cost" class="form-control" @bind-Value="form.MaterialsCost" step="0.01" min="0" />
+                <ValidationMessage For="@(() => form.MaterialsCost)" />
+            </div>
+        </div>
+
+        @if (errorMessage is not null)
+        {
+            <div class="error-message" role="alert">
+                <strong>We couldn't complete this job.</strong>
+                <span>@errorMessage</span>
+            </div>
+        }
+
+        <button class="complete-button" type="submit" disabled="@isLoading">
+            @if (isLoading)
+            {
+                <span class="spinner" aria-hidden="true"></span>
+                <span>Completing job...</span>
+            }
+            else
+            {
+                <span>Complete Job</span>
+            }
+        </button>
+    </EditForm>
 </section>
+
+@code {
+    private static readonly string[] trades =
+    [
+        "Plumbing",
+        "Electrical",
+        "Heating",
+        "Roofing",
+        "Carpentry",
+        "Painting",
+        "Landscaping",
+        "GeneralMaintenance"
+    ];
+
+    private readonly ProcessJobRequest form = new();
+    private bool isLoading;
+    private string? errorMessage;
+
+    private async Task SubmitAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var result = await ApiClient.ProcessJobAsync(form);
+            ResultState.Set(result);
+            Navigation.NavigateTo("/results");
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or InvalidOperationException)
+        {
+            errorMessage = "Please check that the API is running, then try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private static string FormatTrade(string trade) =>
+        trade == "GeneralMaintenance" ? "General Maintenance" : trade;
+}
