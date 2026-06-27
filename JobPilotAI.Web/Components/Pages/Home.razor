@@ -1,0 +1,46 @@
+﻿@page "/"
+
+<PageTitle>Dashboard | JobPilotAI</PageTitle>
+
+<section class="dashboard-hero">
+    <div>
+        <p class="eyebrow">Your workspace</p>
+        <h1>Welcome back</h1>
+        <p class="hero-copy">AI Office Assistant for Tradespeople</p>
+    </div>
+    <a class="primary-action" href="new-job">
+        <span aria-hidden="true">+</span>
+        New Job
+    </a>
+</section>
+
+<section class="stats-section" aria-labelledby="overview-title">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">At a glance</p>
+            <h2 id="overview-title">Business overview</h2>
+        </div>
+        <span class="period-label">Today</span>
+    </div>
+
+    <div class="stats-grid">
+        <article class="stat-card stat-card-jobs">
+            <div class="stat-accent" aria-hidden="true"></div>
+            <p>Jobs Today</p>
+            <strong>0</strong>
+            <span>No jobs scheduled yet</span>
+        </article>
+        <article class="stat-card stat-card-quotes">
+            <div class="stat-accent" aria-hidden="true"></div>
+            <p>Outstanding Quotes</p>
+            <strong>0</strong>
+            <span>All quotes are up to date</span>
+        </article>
+        <article class="stat-card stat-card-payment">
+            <div class="stat-accent" aria-hidden="true"></div>
+            <p>Awaiting Payment</p>
+            <strong>&pound;0</strong>
+            <span>No outstanding invoices</span>
+        </article>
+    </div>
+</section>
