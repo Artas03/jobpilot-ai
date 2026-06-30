@@ -20,6 +20,8 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
+    await app.Services.EnsureJobPilotDatabaseCreatedAsync();
+
     app.UseSwagger();
     app.UseSwaggerUI();
 }

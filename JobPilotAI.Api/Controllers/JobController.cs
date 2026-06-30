@@ -1,6 +1,7 @@
 using JobPilotAI.Application.Commands;
 using JobPilotAI.Application.DTOs;
 using JobPilotAI.Application.Interfaces;
+using JobPilotAI.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
 
 namespace JobPilotAI.Api.Controllers;
@@ -10,10 +11,12 @@ namespace JobPilotAI.Api.Controllers;
 public class JobController : ControllerBase
 {
     private readonly IJobProcessor _jobProcessor;
+    private readonly IProcessedJobStore _processedJobStore;
 
-    public JobController(IJobProcessor jobProcessor)
+    public JobController(IJobProcessor jobProcessor, IProcessedJobStore processedJobStore)
     {
         _jobProcessor = jobProcessor;
+        _processedJobStore = processedJobStore;
     }
 
     [HttpPost("process")]
@@ -21,6 +24,7 @@ public class JobController : ControllerBase
     public async Task<ActionResult<ProcessJobResult>> Process(ProcessJobCommand command)
     {
         var result = await _jobProcessor.ProcessAsync(command);
+        await _processedJobStore.SaveProcessedAsync(command, result);
 
         return Ok(result);
     }
