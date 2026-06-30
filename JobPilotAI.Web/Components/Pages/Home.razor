@@ -1,4 +1,7 @@
 ﻿@page "/"
+@rendermode InteractiveServer
+@using System.Globalization
+@inject ApiClient ApiClient
 
 <PageTitle>Dashboard | JobPilotAI</PageTitle>
 
@@ -13,6 +16,113 @@
         New Job
     </a>
 </section>
+
+<section class="recent-section" aria-labelledby="recent-jobs-title">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">Latest activity</p>
+            <h2 id="recent-jobs-title">Recent Jobs</h2>
+        </div>
+    </div>
+
+    <div class="recent-panel" aria-live="polite">
+        @if (isLoading)
+        {
+            <div class="state-message loading-state">
+                <span class="spinner" aria-hidden="true"></span>
+                <span>Loading recent jobs...</span>
+            </div>
+        }
+        else if (errorMessage is not null)
+        {
+            <div class="state-message error-state" role="alert">
+                <strong>Recent jobs are unavailable.</strong>
+                <span>@errorMessage</span>
+                <button type="button" @onclick="LoadJobsAsync">Try again</button>
+            </div>
+        }
+        else if (jobs.Count == 0)
+        {
+            <div class="state-message empty-state">
+                <strong>No jobs completed yet.</strong>
+                <span>Complete your first job to see it here.</span>
+            </div>
+        }
+        else
+        {
+            <div class="jobs-table-wrapper">
+                <table class="jobs-table">
+                    <thead>
+                        <tr>
+                            <th>Customer</th>
+                            <th>Trade</th>
+                            <th>Job address</th>
+                            <th>Created</th>
+                            <th>Invoice total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var job in jobs)
+                        {
+                            <tr>
+                                <td data-label="Customer"><strong>@job.CustomerName</strong></td>
+                                <td data-label="Trade"><span class="trade-label">@FormatTrade(job.TradeType)</span></td>
+                                <td data-label="Job address">@(job.JobAddress ?? "Not provided")</td>
+                                <td data-label="Created"><time datetime="@job.CreatedAt.ToString("O")">@FormatDate(job.CreatedAt)</time></td>
+                                <td data-label="Invoice total" class="amount">
+                                    @(job.InvoiceTotal.HasValue ? FormatCurrency(job.InvoiceTotal.Value) : "Not available")
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    private IReadOnlyCollection<SavedJob> jobs = [];
+    private bool isLoading = true;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadJobsAsync();
+    }
+
+    private async Task LoadJobsAsync()
+    {
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            var savedJobs = await ApiClient.GetJobsAsync();
+            jobs = savedJobs
+                .OrderByDescending(job => job.CreatedAt)
+                .ToArray();
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or InvalidOperationException)
+        {
+            jobs = [];
+            errorMessage = "Please check that the API is running, then try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private static string FormatTrade(string tradeType) =>
+        tradeType == "GeneralMaintenance" ? "General Maintenance" : tradeType;
+
+    private static string FormatDate(DateTime createdAt) =>
+        createdAt.ToLocalTime().ToString("dd MMM yyyy", CultureInfo.GetCultureInfo("en-GB"));
+
+    private static string FormatCurrency(decimal value) =>
+        value.ToString("C", CultureInfo.GetCultureInfo("en-GB"));
+}
 
 <section class="stats-section" aria-labelledby="overview-title">
     <div class="section-heading">
