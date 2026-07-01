@@ -2,6 +2,7 @@
 @rendermode InteractiveServer
 @using System.Globalization
 @inject ApiClient ApiClient
+@inject NavigationManager Navigation
 
 <PageTitle>Dashboard | JobPilotAI</PageTitle>
 
@@ -64,7 +65,12 @@
                     <tbody>
                         @foreach (var job in jobs)
                         {
-                            <tr>
+                            <tr class="job-row"
+                                tabindex="0"
+                                role="link"
+                                aria-label="@($"View job for {job.CustomerName}")"
+                                @onclick="() => OpenJob(job.Id)"
+                                @onkeydown="eventArgs => HandleRowKeyDown(eventArgs, job.Id)">
                                 <td data-label="Customer"><strong>@job.CustomerName</strong></td>
                                 <td data-label="Trade"><span class="trade-label">@FormatTrade(job.TradeType)</span></td>
                                 <td data-label="Job address">@(job.JobAddress ?? "Not provided")</td>
@@ -122,6 +128,19 @@
 
     private static string FormatCurrency(decimal value) =>
         value.ToString("C", CultureInfo.GetCultureInfo("en-GB"));
+
+    private void OpenJob(Guid id)
+    {
+        Navigation.NavigateTo($"/jobs/{id}");
+    }
+
+    private void HandleRowKeyDown(KeyboardEventArgs eventArgs, Guid id)
+    {
+        if (eventArgs.Key is "Enter" or " ")
+        {
+            OpenJob(id);
+        }
+    }
 }
 
 <section class="stats-section" aria-labelledby="overview-title">

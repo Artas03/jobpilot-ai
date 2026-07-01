@@ -235,6 +235,20 @@ h1 {
     border-bottom: 0;
 }
 
+.job-row {
+    cursor: pointer;
+    transition: background-color 150ms ease;
+}
+
+.job-row:hover {
+    background: #f4f8f6;
+}
+
+.job-row:focus {
+    outline: 3px solid rgba(13, 107, 93, 0.2);
+    outline-offset: -3px;
+}
+
 .jobs-table td strong {
     color: #26332f;
 }

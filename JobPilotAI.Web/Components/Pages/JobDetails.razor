@@ -1,0 +1,225 @@
+@page "/jobs/{Id:guid}"
+@rendermode InteractiveServer
+@using System.Globalization
+@inject ApiClient ApiClient
+@inject JobResultState ResultState
+
+<PageTitle>Job Details | JobPilotAI</PageTitle>
+
+<a class="back-button" href="/">Back to Dashboard</a>
+
+@if (isLoading)
+{
+    <div class="page-state" aria-live="polite">
+        <span class="spinner" aria-hidden="true"></span>
+        <span>Loading job details...</span>
+    </div>
+}
+else if (errorMessage is not null)
+{
+    <div class="page-state error-state" role="alert">
+        <strong>@errorTitle</strong>
+        <span>@errorMessage</span>
+        <button type="button" @onclick="LoadJobAsync">Try again</button>
+    </div>
+}
+else if (job is not null)
+{
+    <header class="details-header">
+        <div>
+            <p class="eyebrow">Completed job</p>
+            <h1>@job.CustomerName</h1>
+            <span class="trade-label">@FormatTrade(job.TradeType)</span>
+        </div>
+        <dl class="job-meta">
+            <div>
+                <dt>Address</dt>
+                <dd>@(job.JobAddress ?? "Not provided")</dd>
+            </div>
+            <div>
+                <dt>Date completed</dt>
+                <dd><time datetime="@job.CreatedAt.ToString("O")">@FormatDate(job.CreatedAt)</time></dd>
+            </div>
+        </dl>
+    </header>
+
+    <div class="document-sections">
+        <section class="document-section" aria-labelledby="notes-title">
+            <p class="section-number">01</p>
+            <div>
+                <h2 id="notes-title">Original Job Notes</h2>
+                <p class="document-copy">@DisplayText(job.RawNotes)</p>
+            </div>
+        </section>
+
+        <section class="document-section" aria-labelledby="summary-title">
+            <p class="section-number">02</p>
+            <div>
+                <h2 id="summary-title">Professional AI Summary</h2>
+                <p class="document-copy">@DisplayText(job.ProfessionalSummary)</p>
+            </div>
+        </section>
+
+        <section class="document-section" aria-labelledby="follow-up-title">
+            <p class="section-number">03</p>
+            <div>
+                <h2 id="follow-up-title">Customer Follow-up</h2>
+                <p class="document-copy">@DisplayText(job.FollowUpMessage)</p>
+            </div>
+        </section>
+
+        <section class="document-section" aria-labelledby="actions-title">
+            <p class="section-number">04</p>
+            <div>
+                <h2 id="actions-title">Suggested Next Actions</h2>
+                @if (job.SuggestedNextActions.Count > 0)
+                {
+                    <ol class="action-list">
+                        @foreach (var action in job.SuggestedNextActions)
+                        {
+                            <li>@action</li>
+                        }
+                    </ol>
+                }
+                else
+                {
+                    <p class="unavailable">Not available for this saved job.</p>
+                }
+            </div>
+        </section>
+
+        <section class="document-section" aria-labelledby="social-title">
+            <p class="section-number">05</p>
+            <div>
+                <h2 id="social-title">Social Media Post</h2>
+                <p class="document-copy">@DisplayText(job.SocialMediaPost)</p>
+            </div>
+        </section>
+
+        <section class="document-section invoice-section" aria-labelledby="invoice-title">
+            <p class="section-number">06</p>
+            <div>
+                <div class="invoice-heading">
+                    <div>
+                        <h2 id="invoice-title">Invoice</h2>
+                        @if (job.Invoice is not null)
+                        {
+                            <p>@job.Invoice.InvoiceNumber</p>
+                        }
+                    </div>
+                    @if (job.Invoice is not null)
+                    {
+                        <div class="invoice-total">
+                            <span>Total</span>
+                            <strong>@FormatCurrency(job.Invoice.Total)</strong>
+                        </div>
+                    }
+                </div>
+
+                @if (job.Invoice is not null)
+                {
+                    <div class="invoice-table-wrapper">
+                        <table class="invoice-table">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Quantity</th>
+                                    <th>Unit price</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in job.Invoice.Items)
+                                {
+                                    <tr>
+                                        <td>@item.Description</td>
+                                        <td>@item.Quantity</td>
+                                        <td>@FormatCurrency(item.UnitPrice)</td>
+                                        <td>@FormatCurrency(item.Total)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="unavailable">Invoice details are not available for this saved job.</p>
+                }
+            </div>
+        </section>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private SavedJobDetails? job;
+    private bool isLoading = true;
+    private string? errorTitle;
+    private string? errorMessage;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadJobAsync();
+    }
+
+    private async Task LoadJobAsync()
+    {
+        isLoading = true;
+        errorTitle = null;
+        errorMessage = null;
+
+        try
+        {
+            job = await ApiClient.GetJobAsync(Id);
+
+            if (job is null)
+            {
+                errorTitle = "Job not found";
+                errorMessage = "This job may have been removed or the link may be incorrect.";
+                return;
+            }
+
+            ApplyCurrentResult(job);
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or InvalidOperationException)
+        {
+            job = null;
+            errorTitle = "Job details are unavailable";
+            errorMessage = "Please check that the API is running, then try again.";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ApplyCurrentResult(SavedJobDetails savedJob)
+    {
+        if (ResultState.Current is not { } result || result.JobId != savedJob.Id)
+        {
+            return;
+        }
+
+        savedJob.ProfessionalSummary = result.ProfessionalSummary;
+        savedJob.FollowUpMessage = result.FollowUpMessage;
+        savedJob.SuggestedNextActions = result.SuggestedNextActions;
+        savedJob.SocialMediaPost = result.SocialMediaPost;
+        savedJob.Invoice = result.Invoice;
+        savedJob.InvoiceTotal = result.Invoice.Total;
+    }
+
+    private static string DisplayText(string? value) =>
+        string.IsNullOrWhiteSpace(value) ? "Not available for this saved job." : value;
+
+    private static string FormatTrade(string tradeType) =>
+        tradeType == "GeneralMaintenance" ? "General Maintenance" : tradeType;
+
+    private static string FormatDate(DateTime createdAt) =>
+        createdAt.ToLocalTime().ToString("dd MMMM yyyy", CultureInfo.GetCultureInfo("en-GB"));
+
+    private static string FormatCurrency(decimal value) =>
+        value.ToString("C", CultureInfo.GetCultureInfo("en-GB"));
+}
